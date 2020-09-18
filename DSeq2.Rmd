@@ -5,3 +5,14 @@ date: "9/15/2020"
 output: html_document
 ---
 
+```{r}
+#this is a script to normalize and do differential expression analysis on a batch effected sRNA seq dataset
+
+library(DESeq2)
+library(dplyr)
+library(limma)
+
+
+```
+
+
