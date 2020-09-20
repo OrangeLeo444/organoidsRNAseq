@@ -37,3 +37,20 @@ cData_filtered$tissue<-factor(cData_filtered$tissue)
 dds = DESeqDataSetFromMatrix(countData=expressed_genes, colData=cData_filtered, design= ~tissue)
 # choose and assign reference samples
 dds$tissue = relevel(dds$tissue, ref="normal")
+
+# run DESeq to test data
+dds = DESeq(dds)
+
+# report results to res variable
+res = results(dds,alpha=0.05)
+
+# write full DESeq2 results to a table
+write.table(res, "output/DESeq2_results.txt",sep="\t",quote=F)
+
+#LFC shrinkage 
+resLFC <- lfcShrink(dds, coef="tissue_primary_vs_normal", type="apeglm")
+
+# plot log fold change as a function of transcript abundance, your data should be centered around 0 on the y-axis if it is well normalized
+# alpha is set to 0.05 because of convention
+plotMA(res, 0.05, main="",
+       xlab= "Mean of Normalized counts")
