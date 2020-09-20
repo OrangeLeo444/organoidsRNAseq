@@ -29,7 +29,7 @@ all(rownames(cData_filtered) %in% colnames(cts))
 all(rownames(cData_filtered)==colnames(cts_clean))
 
 # strip transcripts with expression lower than avg 10 counts per sample
-expressed_genes <- cts_clean[rowSums(cts_clean)>10,]
+expressed_genes <- cts_clean[rowSums(cts_clean)>80,]
 
 cData_filtered$tissue<-factor(cData_filtered$tissue)
 
@@ -52,5 +52,6 @@ resLFC <- lfcShrink(dds, coef="tissue_primary_vs_normal", type="apeglm")
 
 # plot log fold change as a function of transcript abundance, your data should be centered around 0 on the y-axis if it is well normalized
 # alpha is set to 0.05 because of convention
-plotMA(res, 0.05, main="",
-       xlab= "Mean of Normalized counts")
+DESeq2::plotMA(res,0.05,main='alpha = 0.05',ylim=c(-2,2))
+
+
