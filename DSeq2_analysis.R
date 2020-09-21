@@ -54,4 +54,23 @@ resLFC <- lfcShrink(dds, coef="tissue_primary_vs_normal", type="apeglm")
 # alpha is set to 0.05 because of convention
 DESeq2::plotMA(res,0.05,main='alpha = 0.05',ylim=c(-2,2))
 
+DESeq2::plotMA(resLFC,0.05,main='alpha = 0.05 log fold change shrinkage')
+
+# another normalization method with a variance stabilizing transform, a type of log transform
+# good for comparing between datasets
+vst_norm = vst(dds)
+
+
+vst_corr_for_table <- assay(vst_norm)
+
+# write a new vst normalized count table
+write.table(vst_corr_for_table, "output/DESeq2_vst_normalized_ct.txt", sep="\t",quote=F,row.names=T,col.names=T)
+
+### Count Table Batch Correction
+
+# checking for batch effects in our vst normalized data
+
+plotPCA(vst_norm,"batch")
+
+plotPCA(vst_norm,"tissue")
 
