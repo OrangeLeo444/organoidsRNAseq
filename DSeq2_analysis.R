@@ -71,7 +71,7 @@ write.table(vst_corr_for_table, "output/DESeq2_vst_normalized_ct.txt", sep="\t",
 # checking for batch effects in our vst normalized data
 
 plotPCA(vst_norm,"tissue")
-
-
-
+plotPCA(vst_norm,"seq_batch")
+plotPCA(vst_norm,"passage")
+plotPCA(vst_norm,"day")
 
