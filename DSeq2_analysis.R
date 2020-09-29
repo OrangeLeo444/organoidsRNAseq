@@ -32,9 +32,10 @@ all(rownames(cData_filtered)==colnames(cts_clean))
 expressed_genes <- cts_clean[rowSums(cts_clean)>80,]
 
 cData_filtered$tissue<-factor(cData_filtered$tissue)
+cData_filtered$seq_batch<-factor(cData_filtered$seq_batch)
 
 # create a DESeq data structure from raw counts for statistical testing
-dds = DESeqDataSetFromMatrix(countData=expressed_genes, colData=cData_filtered, design= ~tissue)
+dds = DESeqDataSetFromMatrix(countData=expressed_genes, colData=cData_filtered, design= ~tissue+seq_batch)
 # choose and assign reference samples
 dds$tissue = relevel(dds$tissue, ref="normal")
 
@@ -42,19 +43,20 @@ dds$tissue = relevel(dds$tissue, ref="normal")
 dds = DESeq(dds)
 
 # report results to res variable
-res = results(dds,alpha=0.05)
-
+res = results(dds,alpha=0.05, contrast=c("tissue","normal","primary"))
+summary(res)
+sum(res$padj < 0.05, na.rm = TRUE)
 # write full DESeq2 results to a table
-write.table(res, "output/DESeq2_results.txt",sep="\t",quote=F)
+write.table(res, "output/DESeq2_results_batch_correct.txt",sep="\t",quote=F)
 
 #LFC shrinkage 
 resLFC <- lfcShrink(dds, coef="tissue_primary_vs_normal", type="apeglm")
 
 # plot log fold change as a function of transcript abundance, your data should be centered around 0 on the y-axis if it is well normalized
 # alpha is set to 0.05 because of convention
-DESeq2::plotMA(res,0.05,main='alpha = 0.05',ylim=c(-2,2))
+DESeq2::plotMA(res,0.05,main='padj < 0.05 tissue+batch',ylim=c(-4,4))
 
-DESeq2::plotMA(resLFC,0.05,main='alpha = 0.05 log fold change shrinkage')
+DESeq2::plotMA(resLFC,0.05,main='padj < 0.05 log fold change shrinkage tissue+batch', ylim=c(-4,4))
 
 # another normalization method with a variance stabilizing transform, a type of log transform
 # good for comparing between datasets
@@ -64,7 +66,7 @@ vst_norm = vst(dds)
 vst_corr_for_table <- assay(vst_norm)
 
 # write a new vst normalized count table
-write.table(vst_corr_for_table, "output/DESeq2_vst_normalized_ct.txt", sep="\t",quote=F,row.names=T,col.names=T)
+write.table(vst_corr_for_table, "output/DESeq2_vst_normalized_ct_batch_correct.txt", sep="\t",quote=F,row.names=T,col.names=T)
 
 ### Count Table Batch Correction
 
@@ -74,4 +76,4 @@ plotPCA(vst_norm,"tissue")
 plotPCA(vst_norm,"seq_batch")
 plotPCA(vst_norm,"passage")
 plotPCA(vst_norm,"day")
-
+plotPCA(vst_norm,"patient_id")
