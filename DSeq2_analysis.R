@@ -3,6 +3,8 @@ library(DESeq2)
 library(dplyr)
 library(limma)
 library(readxl)
+library(ggplot2)
+library(forcats)
 ## Load data
 cts <- read.table("data/all.tsv", header=T, sep='\t')
 annotation <- read_excel("data/elstar_colon_RNAseq_sample_sheet.xlsx")
@@ -77,3 +79,49 @@ plotPCA(vst_norm,"seq_batch")
 plotPCA(vst_norm,"passage")
 plotPCA(vst_norm,"day")
 plotPCA(vst_norm,"patient_id")
+
+### Format res report
+#order data based on logfold change 
+res_no_format = res
+res_no_format_log_fold_ordered = res_no_format[order(-res_no_format$log2FoldChange),]
+#filter for significant and abundant genes
+#get a boolean vector
+res_of_interest_bool = !is.na(res_no_format_log_fold_ordered$padj) & res_no_format_log_fold_ordered$padj < 0.05 & res_no_format_log_fold_ordered$baseMean >= 100
+#filter on boolean vector
+res_of_interest = res_no_format_log_fold_ordered[res_of_interest_bool,]
+#filter on boolean vector
+DESeq2::plotMA(res_of_interest,0.05,main='padj < 0.05 tissue+batch',ylim=c(-4,4))
+
+###### Realize the batch correction 
+#actual batch correction
+assay(vst_norm) = limma::removeBatchEffect(assay(vst_norm), vst_norm$seq_batch)
+
+# check to look at the corrected structure of the data
+
+plotPCA(vst_norm,"tissue")
+
+plotPCA(vst_norm,"seq_batch")
+
+
+pcaData <- plotPCA(vst_norm, intgroup=c("passage"), returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+ggplot(pcaData, aes(PC1, PC2, color=factor(passage,levels=c('P1','P2','P3','P4','P7','P8','P9','P12')))) +
+  geom_point(size=3) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  coord_fixed() + labs(color = "Passage") +scale_color_brewer(palette="Dark2")
+
+library(RColorBrewer)
+mycolors = c(brewer.pal(name="Set1", n = 9), brewer.pal(name="Pastel1", n = 5))
+pcaData <- plotPCA(vst_norm, intgroup=c("patient_id"), returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+ggplot(pcaData, aes(PC1, PC2, color=factor(patient_id,levels=c('R1N','R1T','R5N','R5T','R6N','R6T','R7T','R8T','R11N', 'R11T','R12N','R12T','R13T','R14T')))) +
+  geom_point(size=3) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  coord_fixed() + labs(color = "Patient") +scale_color_manual(values=mycolors)
+
+
+vst_batch_corr_for_table <- assay(vst_norm)
+write.table(vst_batch_corr_for_table, "output/DESeq2_vst_normalized_batch_corrected_ct.txt", sep="\t",quote=F,row.names=T,col.names=T)
+
