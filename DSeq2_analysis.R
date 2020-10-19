@@ -86,7 +86,7 @@ res_no_format = res
 res_no_format_log_fold_ordered = res_no_format[order(-res_no_format$log2FoldChange),]
 #filter for significant and abundant genes
 #get a boolean vector
-res_of_interest_bool = !is.na(res_no_format_log_fold_ordered$padj) & res_no_format_log_fold_ordered$padj < 0.05 & res_no_format_log_fold_ordered$baseMean >= 100
+res_of_interest_bool = !is.na(res_no_format_log_fold_ordered$padj) & res_no_format_log_fold_ordered$padj < 0.05 & (res_no_format_log_fold_ordered$log2FoldChange >= 1.5 | res_no_format_log_fold_ordered$log2FoldChange <= -1.5)
 #filter on boolean vector
 res_of_interest = res_no_format_log_fold_ordered[res_of_interest_bool,]
 #filter on boolean vector
